@@ -1,28 +1,41 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 import 'package:notes_app/models/note.dart';
 import 'package:notes_app/models/notes.dart';
 import 'package:notes_app/screens/screens.dart';
 
-class HomeScreen extends StatelessWidget {
-  final noteList = Notes.nota;
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final listadoNotas = Notes.nota;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Notas"),
+        actions: [Container()],
       ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
         color: Colors.blueGrey,
-        child: NotesList(notes: noteList),
+        child: NotesList(
+          pListadoNotas: listadoNotas,
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color.fromRGBO(115, 84, 122, 1),
-        onPressed: () => Navigator.pushNamed(context, '/agregar'),
+        onPressed: () => Navigator.pushNamed(context, '/agregar').then((value) {
+          setState(() {});
+        }),
         child: const Icon(
           Icons.note_add_outlined,
           color: Colors.white,
@@ -33,11 +46,11 @@ class HomeScreen extends StatelessWidget {
 }
 
 class NotesList extends StatefulWidget {
-  List<Note> notes;
+  final List<Note> pListadoNotas;
 
-  NotesList({
+  const NotesList({
     Key? key,
-    required this.notes,
+    required this.pListadoNotas,
   }) : super(key: key);
 
   @override
@@ -45,11 +58,20 @@ class NotesList extends StatefulWidget {
 }
 
 class _NotesListState extends State<NotesList> {
+  List<Note> notes = [];
 
   @override
   void initState() {
     super.initState();
+    notes = widget.pListadoNotas;
   }
+
+  void _deleteNote(Note pNota) {
+    setState(() {
+      notes.removeWhere((element) => element == pNota);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -62,18 +84,17 @@ class _NotesListState extends State<NotesList> {
           ),
           width: double.infinity,
           child: Column(
-            // mainAxisAlignment: MainAxisAlignment.start,
-            // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ListView.builder(
                 physics: const ScrollPhysics(),
                 shrinkWrap: true,
-                itemCount: widget.notes.length,
+                itemCount: notes.length,
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.all(5.0),
                     child: _buildNotes(
-                      nota: widget.notes[index],
+                      pNote: notes[index],
+                      functionCallback: _deleteNote,
                     ),
                   );
                 },
@@ -87,11 +108,13 @@ class _NotesListState extends State<NotesList> {
 }
 
 class _buildNotes extends StatefulWidget {
-  Note nota;
+  final Note pNote;
+  final Function(Note) functionCallback;
 
-  _buildNotes({
+  const _buildNotes({
     Key? key,
-    required this.nota,
+    required this.pNote,
+    required this.functionCallback,
   }) : super(key: key);
 
   @override
@@ -99,26 +122,80 @@ class _buildNotes extends StatefulWidget {
 }
 
 class _buildNotesState extends State<_buildNotes> {
+  late Note note;
+
+  @override
+  void initState() {
+    super.initState();
+    note = widget.pNote;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Expanded(
           child: Card(
+            elevation: 2,
             color: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
             ),
             child: InkWell(
+              onLongPress: () {
+                showDialog(
+                  barrierDismissible: false,
+                  useSafeArea: true,
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    actions: [
+                      TextButton(
+                        child: const Text("Si"),
+                        onPressed: () {
+                          setState(() {
+                            widget.functionCallback(note);
+                          });
+                          Navigator.pop(context);
+                        },
+                      ),
+                      TextButton(
+                        child: const Text("No"),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                    title: const Center(child: Text("Eliminando nota")),
+                    content: const Text("¿Estas seguro de borrar esta nota?"),
+                  ),
+                );
+              },
               borderRadius: BorderRadius.circular(15),
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => NotaScreen.edit(widget.nota),
+                  builder: (context) => NotaScreen.edit(note),
                 ));
               },
-              child: SizedBox(
-                height: 50,
-                child: Center(child: Text(widget.nota.descripcion)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width / 1.35,
+                    height: 50,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 10.0, right: 10),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          note.descripcion,
+                          maxLines: 2,
+                          softWrap: false,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:notes_app/models/note.dart';
 import 'package:notes_app/models/notes.dart';
+import 'package:notes_app/screens/screens.dart';
 
-class NotaScreen extends StatelessWidget {
+class NotaScreen extends StatefulWidget {
   final Note note;
 
   const NotaScreen({
@@ -21,6 +22,12 @@ class NotaScreen extends StatelessWidget {
       note: Note(id: 0, descripcion: ''),
     );
   }
+
+  @override
+  State<NotaScreen> createState() => _NotaScreenState();
+}
+
+class _NotaScreenState extends State<NotaScreen> {
   @override
   Widget build(BuildContext context) {
     GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -28,7 +35,9 @@ class NotaScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Nota - Nueva"),
+        title: widget.note.descripcion != ''
+            ? const Text("Nota - Editar")
+            : const Text("Nota - Nueva"),
       ),
       body: Container(
         width: double.infinity,
@@ -42,24 +51,24 @@ class NotaScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color.fromRGBO(115, 84, 122, 1),
         onPressed: () {
-          Notes.nota.add(
-            Note(id: Notes.nota.length, descripcion: noteController.text),
-          );
+          if (widget.note.descripcion == '') {
 
-          // Note(id: Notes.nota.length, descripcion: noteController.text),
-          // )
-          // Navigator.pushReplacementNamed(context, '/home');
-          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            // Agregar nota nueva
+            Notes.nota.add(
+              Note(id: Notes.nota.length, descripcion: noteController.text),
+            );
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/home', (route) => false);
+          } else {
+
+            // Buscar nota por id, setear descripcion con el controller
+            Notes.nota
+                .firstWhere((element) => element.id == widget.note.id)
+                .descripcion = noteController.text;
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/home', (route) => false);
+          }
         },
-        // : () {
-        //     Notes.nota
-        //             .where((element) => element.id == note.id)
-        //             .first
-        //             .descripcion ==
-        //         noteController.text;
-        //     Navigator.pushNamedAndRemoveUntil(
-        //         context, '/home', (route) => false);
-        //   },
         child: const Icon(Icons.save, color: Colors.white),
       ),
     );
@@ -67,8 +76,8 @@ class NotaScreen extends StatelessWidget {
 
   Widget _formNewNote(
       GlobalKey<FormState> formKey, TextEditingController noteController) {
-    if (note.descripcion.isNotEmpty || note.descripcion != '') {
-      noteController.text = note.descripcion;
+    if (widget.note.descripcion.isNotEmpty || widget.note.descripcion != '') {
+      noteController.text = widget.note.descripcion;
     }
 
     return Form(
@@ -76,7 +85,13 @@ class NotaScreen extends StatelessWidget {
       child: Column(
         children: [
           TextFormField(
-            maxLines: 10,
+            validator: (value) {
+              if (value != null || value == '') {
+                return 'Please enter anything';
+              }
+              return null;
+            },
+            maxLines: 15,
             controller: noteController,
             keyboardType: TextInputType.text,
             decoration: InputDecoration(
@@ -91,7 +106,7 @@ class NotaScreen extends StatelessWidget {
               fillColor: Colors.blueGrey[300],
               filled: true,
             ),
-            maxLength: 150,
+            maxLength: 1000,
           )
         ],
       ),
