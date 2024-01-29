@@ -1,9 +1,7 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 
 import 'package:notes_app/models/note.dart';
-import 'package:notes_app/models/notes.dart';
+import 'package:notes_app/provider/db_provider.dart';
 import 'package:notes_app/screens/screens.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,7 +12,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final listadoNotas = Notes.nota;
+
+  @override
+  void initState() {
+    super.initState(); 
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,9 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
         width: double.infinity,
         height: double.infinity,
         color: Colors.blueGrey,
-        child: NotesList(
-          pListadoNotas: listadoNotas,
-        ),
+        child: const NotesList(),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color.fromRGBO(115, 84, 122, 1),
@@ -43,32 +43,44 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 }
 
-class NotesList extends StatefulWidget {
-  final List<Note> pListadoNotas;
-
+class NotesList extends StatefulWidget { 
+ 
   const NotesList({
-    Key? key,
-    required this.pListadoNotas,
+    Key? key, 
   }) : super(key: key);
 
   @override
   State<NotesList> createState() => _NotesListState();
 }
 
-class _NotesListState extends State<NotesList> {
-  List<Note> notes = [];
+class _NotesListState extends State<NotesList> { 
+  List<Note> listadoNotas = [];
 
   @override
   void initState() {
     super.initState();
-    notes = widget.pListadoNotas;
+    initDb();
+    getNotas(); 
+  } 
+
+  void initDb() async {
+    await DatabaseRepository.instance.database;
+  }
+
+  void getNotas() async {
+    await DatabaseRepository.instance.getAllTodos().then((value) {
+      setState(() {
+        listadoNotas = value;
+      });
+    });
   }
 
   void _deleteNote(Note pNota) {
     setState(() {
-      notes.removeWhere((element) => element == pNota);
+      //notes.removeWhere((element) => element == pNota);
     });
   }
 
@@ -85,20 +97,25 @@ class _NotesListState extends State<NotesList> {
           width: double.infinity,
           child: Column(
             children: [
-              ListView.builder(
-                physics: const ScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: notes.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: _buildNotes(
-                      pNote: notes[index],
-                      functionCallback: _deleteNote,
+              listadoNotas.isNotEmpty
+                  ? ListView.builder(
+                      physics: const ScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: listadoNotas.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.all(5.0),
+                          child: _buildNotes(
+                            pNote: listadoNotas[index],
+                            functionCallback: _deleteNote,
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      padding: const EdgeInsets.all(15),
+                      child: const Text("Sin notas aun"),
                     ),
-                  );
-                },
-              )
             ],
           ),
         ),

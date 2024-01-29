@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
 import 'package:notes_app/screens/screens.dart';
 
 void main() => runApp(const MyApp());
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/home',
       routes: {
         '/home': (context) => HomeScreen(),
-        '/agregar': (context) => NotaScreen.add(), 
+        '/agregar': (context) => NotaScreen(),
       },
       debugShowCheckedModeBanner: false,
       title: 'Material App',
