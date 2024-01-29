@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:notes_app/models/note.dart';
-import 'package:notes_app/models/notes.dart';
-import 'package:notes_app/provider/db_provider.dart';
-import 'package:notes_app/screens/screens.dart';
+import 'package:notes_app/models/note.dart'; 
+import 'package:notes_app/provider/db_provider.dart'; 
 
 class NotaScreen extends StatefulWidget {
   final Note? note;
